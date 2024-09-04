@@ -15,8 +15,9 @@ namespace Lab1
     {
         enum Mode
         {
-            Draw,
-            Drag
+            Drawing,
+            Dragging,
+            Editing
         }
         struct Point
         {
@@ -30,14 +31,25 @@ namespace Lab1
                 return t;
             }
         }
+        struct SimpleColor
+        {
+            public byte r, g, b;
+
+            public SimpleColor(byte newR, byte newG, byte newB)
+            {
+                r = newR;
+                g = newG;
+                b = newB;
+            }
+        }
         struct Triangle
         {
             public Point point1, point2, point3;
-            public Color color;
+            public SimpleColor color;
         }
 
         OpenGL gl;
-        Mode mode = Mode.Draw;
+        Mode mode = Mode.Drawing;
         List<Triangle> tris = new List<Triangle>();
         Point[] pointsBuffer = new Point[3];
         byte pointsInBuffer = 0;
@@ -56,7 +68,7 @@ namespace Lab1
 
             foreach (Triangle tri in tris)
             {
-                gl.Color(tri.color.R, tri.color.G, tri.color.B);
+                gl.Color(tri.color.r, tri.color.g, tri.color.b);
                 gl.Begin(OpenGL.GL_TRIANGLES);
                 gl.Vertex(tri.point1.x, tri.point1.y);
                 gl.Vertex(tri.point2.x, tri.point2.y);
@@ -69,9 +81,7 @@ namespace Lab1
 
         private void openGLControl1_Load(object sender, EventArgs e)
         {
-            gl = openGLControl1.OpenGL;
-
-            contextMenuStrip1.Items.Add("Change Color");
+            gl = openGLControl1.OpenGL;            
         }
 
         private void openGLControl1_MouseDown(object sender, MouseEventArgs e)
@@ -79,7 +89,7 @@ namespace Lab1
             // Если нажата ЛКМ
             if (e.Button == MouseButtons.Left)
             {
-                if (mode == Mode.Draw)
+                if (mode == Mode.Drawing)
                 {
                     // Создаем точку с координатами клика и добавляем в буфер
                     Point clickPoint;
@@ -96,18 +106,18 @@ namespace Lab1
                         newTri.point1 = pointsBuffer[0];
                         newTri.point2 = pointsBuffer[1];
                         newTri.point3 = pointsBuffer[2];
-                        newTri.color = Color.Red;
+                        newTri.color = new SimpleColor(255, 0, 0);
 
                         tris.Add(newTri);
                     }
                 } 
-                else if (mode == Mode.Drag)
+                else if (mode == Mode.Dragging)
                 {
                     Point p;
                     p.x = (short)e.X;
                     p.y = (short)e.Y;
  
-                    for (int i = 0; i < tris.Count && selectedTriangle == -1; i++)
+                    for (int i = tris.Count - 1; i >= 0 && selectedTriangle == -1; i--)
                     {
                         if (isInsideTriangle(tris[i], p))
                         {
@@ -117,16 +127,18 @@ namespace Lab1
                         }
                     }
                 }
-            } else if (e.Button == MouseButtons.Right)
+            } 
+            else if (e.Button == MouseButtons.Right)
             {
                 Point p;
                 p.x = (short)e.X;
                 p.y = (short)e.Y;
 
-                for (int i = 0; i < tris.Count && selectedTriangle == -1; i++)
+                for (int i = tris.Count - 1; i >= 0 && selectedTriangle == -1; i--)
                 {
                     if (isInsideTriangle(tris[i], p))
                     {
+                        mode = Mode.Editing;
                         selectedTriangle = i;
                         prevMouseLocation.x = (short)e.X;
                         prevMouseLocation.y = (short)e.Y;
@@ -171,7 +183,7 @@ namespace Lab1
 
         private void openGLControl1_MouseMove(object sender, MouseEventArgs e)
         {
-            if (selectedTriangle != -1 && e.Button == MouseButtons.Left && mode == Mode.Drag)
+            if (selectedTriangle != -1 && e.Button == MouseButtons.Left && mode == Mode.Dragging)
             {
                 Point delta;
                 delta.x = (short)(e.X - prevMouseLocation.x);
@@ -189,16 +201,34 @@ namespace Lab1
 
         private void drawButton_Click(object sender, EventArgs e)
         {
-            mode = Mode.Draw;
+            mode = Mode.Drawing;
         }
 
         private void dragButton_Click(object sender, EventArgs e)
         {
-            mode = Mode.Drag;
+            mode = Mode.Dragging;
         }
 
         private void openGLControl1_MouseUp(object sender, MouseEventArgs e)
         {
+            if (mode == Mode.Dragging)
+                selectedTriangle = -1;
+        }
+
+        private void changeColorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            colorPickPanel.Visible = true;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Triangle temp = tris[selectedTriangle];
+            temp.color.r = (byte)redInput.Value;
+            temp.color.g = (byte)greenInput.Value;
+            temp.color.b = (byte)blueInput.Value;
+            tris[selectedTriangle] = temp;
+
+            colorPickPanel.Visible = false;
             selectedTriangle = -1;
         }
     }
