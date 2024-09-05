@@ -16,18 +16,27 @@ namespace Lab1
         enum Mode
         {
             Drawing,
-            Dragging,
-            Editing
+            Dragging
         }
         struct Point
         {
             public short x, y;
+            public SimpleColor color;
 
             public static Point operator +(Point a, Point b)
             {
                 Point t;
                 t.x = (short)(a.x + b.x);
                 t.y = (short)(a.y + b.y);
+                t.color = a.color;
+                return t;
+            }
+            public static Point operator *(Point a, int b)
+            {
+                Point t;
+                t.x = (short)(a.x * b);
+                t.y = (short)(a.y * b);
+                t.color = a.color;
                 return t;
             }
         }
@@ -45,7 +54,7 @@ namespace Lab1
         struct Triangle
         {
             public Point point1, point2, point3;
-            public SimpleColor color;
+            public bool hidden;
         }
 
         OpenGL gl;
@@ -65,23 +74,39 @@ namespace Lab1
         {
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
             gl.LoadIdentity();
-
             foreach (Triangle tri in tris)
             {
-                gl.Color(tri.color.r, tri.color.g, tri.color.b);
-                gl.Begin(OpenGL.GL_TRIANGLES);
+                if (tri.hidden)
+                    gl.Begin(OpenGL.GL_LINE_LOOP);
+                else
+                    gl.Begin(OpenGL.GL_TRIANGLES);
+                gl.Color(tri.point1.color.r, tri.point1.color.g, tri.point1.color.b);
                 gl.Vertex(tri.point1.x, tri.point1.y);
+                gl.Color(tri.point2.color.r, tri.point2.color.g, tri.point2.color.b);
                 gl.Vertex(tri.point2.x, tri.point2.y);
+                gl.Color(tri.point3.color.r, tri.point3.color.g, tri.point3.color.b);
                 gl.Vertex(tri.point3.x, tri.point3.y);
                 gl.End();
 
+            }
+            for (int i = 0; i < pointsInBuffer; i++)
+            {
+                gl.PointSize(20);
+                gl.Enable(OpenGL.GL_POINT_SMOOTH);
+                gl.Begin(OpenGL.GL_POINTS);
+                gl.Color(pointsBuffer[i].color.r, pointsBuffer[i].color.g, pointsBuffer[i].color.b);
+                gl.Vertex(pointsBuffer[i].x, pointsBuffer[i].y);
+                gl.End();
+                gl.Disable(OpenGL.GL_POINT_SMOOTH);
             }
             gl.Finish();
         }
 
         private void openGLControl1_Load(object sender, EventArgs e)
         {
-            gl = openGLControl1.OpenGL;            
+            gl = openGLControl1.OpenGL;
+
+            gl.Enable(OpenGL.GL_MULTISAMPLE);
         }
 
         private void openGLControl1_MouseDown(object sender, MouseEventArgs e)
@@ -95,6 +120,7 @@ namespace Lab1
                     Point clickPoint;
                     clickPoint.x = (short)e.Location.X;
                     clickPoint.y = (short)e.Location.Y;
+                    clickPoint.color = new SimpleColor((byte)redInput.Value, (byte)greenInput.Value, (byte)blueInput.Value);
                     pointsBuffer[pointsInBuffer] = clickPoint;
                     pointsInBuffer++;
 
@@ -106,7 +132,7 @@ namespace Lab1
                         newTri.point1 = pointsBuffer[0];
                         newTri.point2 = pointsBuffer[1];
                         newTri.point3 = pointsBuffer[2];
-                        newTri.color = new SimpleColor(255, 0, 0);
+                        newTri.hidden = false;
 
                         tris.Add(newTri);
                     }
@@ -116,10 +142,12 @@ namespace Lab1
                     Point p;
                     p.x = (short)e.X;
                     p.y = (short)e.Y;
- 
+                    p.color = new SimpleColor();
+                    selectedTriangle = -1;
+
                     for (int i = tris.Count - 1; i >= 0 && selectedTriangle == -1; i--)
                     {
-                        if (isInsideTriangle(tris[i], p))
+                        if (isInsideTriangle(tris[i], p) && !tris[i].hidden)
                         {
                             selectedTriangle = i;
                             prevMouseLocation.x = (short)e.X;
@@ -133,15 +161,14 @@ namespace Lab1
                 Point p;
                 p.x = (short)e.X;
                 p.y = (short)e.Y;
+                p.color = new SimpleColor();
+                selectedTriangle = -1;
 
                 for (int i = tris.Count - 1; i >= 0 && selectedTriangle == -1; i--)
                 {
-                    if (isInsideTriangle(tris[i], p))
+                    if (isInsideTriangle(tris[i], p) && !tris[i].hidden)
                     {
-                        mode = Mode.Editing;
                         selectedTriangle = i;
-                        prevMouseLocation.x = (short)e.X;
-                        prevMouseLocation.y = (short)e.Y;
 
                         contextMenuStrip1.Show(openGLControl1, e.Location);
                     }
@@ -179,6 +206,16 @@ namespace Lab1
                     tris.RemoveAt(tris.Count - 1);
                 }
             }
+            else if (e.KeyCode == Keys.H && e.Modifiers == Keys.Alt)
+            {
+                Triangle temp;
+                for (int i = 0; i < tris.Count; i++)
+                {
+                    temp = tris[i];
+                    temp.hidden = false;
+                    tris[i] = temp;
+                }
+            }
         }
 
         private void openGLControl1_MouseMove(object sender, MouseEventArgs e)
@@ -188,6 +225,7 @@ namespace Lab1
                 Point delta;
                 delta.x = (short)(e.X - prevMouseLocation.x);
                 delta.y = (short)(e.Y - prevMouseLocation.y);
+                delta.color = new SimpleColor();
                 Triangle curTri = tris[selectedTriangle];
                 curTri.point1 += delta;
                 curTri.point2 += delta;
@@ -211,25 +249,30 @@ namespace Lab1
 
         private void openGLControl1_MouseUp(object sender, MouseEventArgs e)
         {
-            if (mode == Mode.Dragging)
+            if (mode == Mode.Dragging && e.Button == MouseButtons.Left)
                 selectedTriangle = -1;
         }
 
         private void changeColorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            colorPickPanel.Visible = true;
+            Triangle curTri = tris[selectedTriangle];
+            SimpleColor newColor = new SimpleColor((byte)redInput.Value, (byte)greenInput.Value, (byte)blueInput.Value);
+            curTri.point1.color = newColor;
+            curTri.point2.color = newColor;
+            curTri.point3.color = newColor;
+            tris[selectedTriangle] = curTri;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void hideToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Triangle temp = tris[selectedTriangle];
-            temp.color.r = (byte)redInput.Value;
-            temp.color.g = (byte)greenInput.Value;
-            temp.color.b = (byte)blueInput.Value;
-            tris[selectedTriangle] = temp;
+            Triangle curTri = tris[selectedTriangle];
+            curTri.hidden = true;
+            tris[selectedTriangle] = curTri;
+        }
 
-            colorPickPanel.Visible = false;
-            selectedTriangle = -1;
+        private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tris.RemoveAt(selectedTriangle);
         }
     }
 }
