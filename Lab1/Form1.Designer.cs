@@ -46,6 +46,7 @@
             this.changeColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.openGLControl1)).BeginInit();
             this.panel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
@@ -61,7 +62,7 @@
             // 
             this.openGLControl1.Cursor = System.Windows.Forms.Cursors.Default;
             this.openGLControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.openGLControl1.DrawFPS = true;
+            this.openGLControl1.DrawFPS = false;
             this.openGLControl1.FrameRate = 60;
             this.openGLControl1.Location = new System.Drawing.Point(200, 0);
             this.openGLControl1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -94,6 +95,7 @@
             this.flowLayoutPanel1.Controls.Add(this.drawButton);
             this.flowLayoutPanel1.Controls.Add(this.dragButton);
             this.flowLayoutPanel1.Controls.Add(this.colorPickPanel);
+            this.flowLayoutPanel1.Controls.Add(this.label1);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Left;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
@@ -264,6 +266,18 @@
             this.deleteToolStripMenuItem.Text = "Delete";
             this.deleteToolStripMenuItem.Click += new System.EventHandler(this.deleteToolStripMenuItem_Click);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.flowLayoutPanel1.SetFlowBreak(this.label1, true);
+            this.label1.Location = new System.Drawing.Point(3, 144);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(159, 64);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "Ctrl+z - отмена\r\nAlt+h - показать все\r\nПКМ по треугольнику - опции";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.label1.Click += new System.EventHandler(this.label1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -276,6 +290,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.openGLControl1)).EndInit();
             this.panel1.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
+            this.flowLayoutPanel1.PerformLayout();
             this.colorPickPanel.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
@@ -306,5 +321,6 @@
         private System.Windows.Forms.NumericUpDown greenInput;
         private System.Windows.Forms.ToolStripMenuItem hideToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
+        private System.Windows.Forms.Label label1;
     }
 }
