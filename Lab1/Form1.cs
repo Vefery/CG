@@ -290,6 +290,9 @@ namespace Lab1
             Triangle curTri = tris[selectedTriangle];
             curTri.hidden = true;
             tris[selectedTriangle] = curTri;
+            if (hoveredOverTri == selectedTriangle)
+                hoveredOverTri = -1;
+            selectedTriangle = -1;
         }
         // Ивент кнопки удалить из контекстного меню
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
