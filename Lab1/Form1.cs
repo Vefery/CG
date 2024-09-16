@@ -14,7 +14,7 @@ namespace Lab1
     public partial class Form1 : Form
     {
         // Режим работы
-        enum Mode
+        enum Mode : byte
         {
             Drawing,
             Dragging
