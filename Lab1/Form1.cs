@@ -60,6 +60,7 @@ namespace Lab1
         struct Triangle
         {
             public Point point1, point2, point3;
+            public Point pivot;
             public bool hidden;
 
             public Triangle(Point newPoint1, Point newPoint2, Point newPoint3)
@@ -68,6 +69,12 @@ namespace Lab1
                 point2 = newPoint2;
                 point3 = newPoint3;
                 hidden = false;
+                pivot = new Point((short)((point1.x + point2.x + point3.x) / 3), (short)((point1.y + point2.y + point3.y) / 3));
+            }
+            public void UpdatePivotPosition()
+            {
+                pivot.x = (short)((point1.x + point2.x + point3.x) / 3);
+                pivot.y = (short)((point1.y + point2.y + point3.y) / 3);
             }
         }
 
@@ -78,7 +85,6 @@ namespace Lab1
         Point prevMouseLocation;
         byte pointsInBuffer = 0;
         int selectedTriangle = -1;
-        int hoveredOverTri = -1;
 
         public Form1()
         {
@@ -102,21 +108,11 @@ namespace Lab1
                 gl.Color(tri.point3.color.r, tri.point3.color.g, tri.point3.color.b);
                 gl.Vertex(tri.point3.x, tri.point3.y);
                 gl.End();
-                if (hoveredOverTri != -1)
-                {
-                    Triangle temp = tris[hoveredOverTri];
-                    gl.Begin(OpenGL.GL_LINE_LOOP);
-                    gl.Color(1, 0.85, 0);
-                    gl.Vertex(temp.point1.x, temp.point1.y);
-                    gl.Vertex(temp.point2.x, temp.point2.y);
-                    gl.Vertex(temp.point3.x, temp.point3.y);
-                    gl.End();
-                }
             }
             // Отрисовка точек из буфера
             for (int i = 0; i < pointsInBuffer; i++)
             {
-                gl.PointSize(20);
+                gl.PointSize(100);
                 gl.Enable(OpenGL.GL_POINT_SMOOTH);
                 gl.Begin(OpenGL.GL_POINTS);
                 gl.Color(pointsBuffer[i].color.r, pointsBuffer[i].color.g, pointsBuffer[i].color.b);
@@ -248,17 +244,43 @@ namespace Lab1
                 curTri.point1 += delta;
                 curTri.point2 += delta;
                 curTri.point3 += delta;
+                curTri.UpdatePivotPosition();
+                // Проверка выхода за экран
+                HandleOutOfBounds(ref curTri);
+
                 tris[selectedTriangle] = curTri;
 
                 prevMouseLocation.x = (short)e.X;
                 prevMouseLocation.y = (short)e.Y;
             }
-            else if (selectedTriangle == -1 && e.Button == MouseButtons.None)
+        }
+        private void HandleOutOfBounds(ref Triangle tri)
+        {
+            if (tri.pivot.x < 0)
             {
-                hoveredOverTri = CheckForTriangle(new Point((short)e.X, (short)e.Y));
+                tri.point1.x -= tri.pivot.x;
+                tri.point2.x -= tri.pivot.x;
+                tri.point3.x -= tri.pivot.x;
+            }
+            else if (tri.pivot.x > this.Width)
+            {
+                tri.point1.x -= (short)(tri.pivot.x - this.Width);
+                tri.point2.x -= (short)(tri.pivot.x - this.Width);
+                tri.point3.x -= (short)(tri.pivot.x - this.Width);
+            }
+            if (tri.pivot.y < 0)
+            {
+                tri.point1.y -= tri.pivot.y;
+                tri.point2.y -= tri.pivot.y;
+                tri.point3.y -= tri.pivot.y;
+            }
+            else if (tri.pivot.y > this.Height)
+            {
+                tri.point1.y -= (short)(tri.pivot.y - this.Height);
+                tri.point2.y -= (short)(tri.pivot.y - this.Height);
+                tri.point3.y -= (short)(tri.pivot.y - this.Height);
             }
         }
-
         private void drawButton_Click(object sender, EventArgs e)
         {
             mode = Mode.Drawing;
@@ -290,8 +312,6 @@ namespace Lab1
             Triangle curTri = tris[selectedTriangle];
             curTri.hidden = true;
             tris[selectedTriangle] = curTri;
-            if (hoveredOverTri == selectedTriangle)
-                hoveredOverTri = -1;
             selectedTriangle = -1;
         }
         // Ивент кнопки удалить из контекстного меню
