@@ -31,31 +31,27 @@
             this.components = new System.ComponentModel.Container();
             this.openGLControl1 = new SharpGL.OpenGLControl();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.colorPanel = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
+            this.colorButton = new System.Windows.Forms.Button();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.label1 = new System.Windows.Forms.Label();
             this.drawButton = new System.Windows.Forms.Button();
             this.dragButton = new System.Windows.Forms.Button();
-            this.colorPickPanel = new System.Windows.Forms.Panel();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.blueInput = new System.Windows.Forms.NumericUpDown();
-            this.greenInput = new System.Windows.Forms.NumericUpDown();
-            this.redLable = new System.Windows.Forms.Label();
-            this.greenLable = new System.Windows.Forms.Label();
-            this.blueLable = new System.Windows.Forms.Label();
-            this.redInput = new System.Windows.Forms.NumericUpDown();
-            this.label1 = new System.Windows.Forms.Label();
+            this.groupButton = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.changeColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.groupsContainer = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.openGLControl1)).BeginInit();
             this.panel1.SuspendLayout();
+            this.colorPanel.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
-            this.colorPickPanel.SuspendLayout();
-            this.tableLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.blueInput)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.greenInput)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.redInput)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -91,12 +87,45 @@
             this.panel1.Size = new System.Drawing.Size(1262, 673);
             this.panel1.TabIndex = 2;
             // 
+            // colorPanel
+            // 
+            this.colorPanel.Controls.Add(this.label2);
+            this.colorPanel.Controls.Add(this.colorButton);
+            this.colorPanel.Location = new System.Drawing.Point(3, 122);
+            this.colorPanel.Name = "colorPanel";
+            this.colorPanel.Size = new System.Drawing.Size(165, 55);
+            this.colorPanel.TabIndex = 1;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label2.Location = new System.Drawing.Point(59, 18);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(104, 18);
+            this.label2.TabIndex = 1;
+            this.label2.Text = "- Current color";
+            // 
+            // colorButton
+            // 
+            this.colorButton.BackColor = System.Drawing.Color.Red;
+            this.colorButton.Location = new System.Drawing.Point(3, 3);
+            this.colorButton.Name = "colorButton";
+            this.colorButton.Size = new System.Drawing.Size(50, 50);
+            this.colorButton.TabIndex = 0;
+            this.colorButton.UseVisualStyleBackColor = false;
+            this.colorButton.Click += new System.EventHandler(this.colorButton_Click);
+            // 
             // flowLayoutPanel1
             // 
+            this.flowLayoutPanel1.Controls.Add(this.label1);
             this.flowLayoutPanel1.Controls.Add(this.drawButton);
             this.flowLayoutPanel1.Controls.Add(this.dragButton);
-            this.flowLayoutPanel1.Controls.Add(this.colorPickPanel);
-            this.flowLayoutPanel1.Controls.Add(this.label1);
+            this.flowLayoutPanel1.Controls.Add(this.groupButton);
+            this.flowLayoutPanel1.Controls.Add(this.label3);
+            this.flowLayoutPanel1.Controls.Add(this.colorPanel);
+            this.flowLayoutPanel1.Controls.Add(this.label4);
+            this.flowLayoutPanel1.Controls.Add(this.groupsContainer);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Left;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
@@ -104,10 +133,20 @@
             this.flowLayoutPanel1.Size = new System.Drawing.Size(200, 673);
             this.flowLayoutPanel1.TabIndex = 1;
             // 
+            // label1
+            // 
+            this.label1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label1.Location = new System.Drawing.Point(3, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(200, 16);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "Edit mode";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // drawButton
             // 
             this.drawButton.Dock = System.Windows.Forms.DockStyle.Top;
-            this.drawButton.Location = new System.Drawing.Point(3, 3);
+            this.drawButton.Location = new System.Drawing.Point(3, 19);
             this.drawButton.Name = "drawButton";
             this.drawButton.Size = new System.Drawing.Size(195, 23);
             this.drawButton.TabIndex = 0;
@@ -118,7 +157,7 @@
             // dragButton
             // 
             this.dragButton.Dock = System.Windows.Forms.DockStyle.Top;
-            this.dragButton.Location = new System.Drawing.Point(3, 32);
+            this.dragButton.Location = new System.Drawing.Point(3, 48);
             this.dragButton.Name = "dragButton";
             this.dragButton.Size = new System.Drawing.Size(195, 23);
             this.dragButton.TabIndex = 1;
@@ -126,126 +165,34 @@
             this.dragButton.UseVisualStyleBackColor = true;
             this.dragButton.Click += new System.EventHandler(this.dragButton_Click);
             // 
-            // colorPickPanel
+            // groupButton
             // 
-            this.colorPickPanel.Controls.Add(this.tableLayoutPanel1);
-            this.colorPickPanel.Location = new System.Drawing.Point(3, 61);
-            this.colorPickPanel.Name = "colorPickPanel";
-            this.colorPickPanel.Size = new System.Drawing.Size(195, 80);
-            this.colorPickPanel.TabIndex = 1;
+            this.groupButton.Dock = System.Windows.Forms.DockStyle.Top;
+            this.groupButton.Location = new System.Drawing.Point(3, 77);
+            this.groupButton.Name = "groupButton";
+            this.groupButton.Size = new System.Drawing.Size(195, 23);
+            this.groupButton.TabIndex = 5;
+            this.groupButton.Text = "Group";
+            this.groupButton.UseVisualStyleBackColor = true;
+            this.groupButton.Click += new System.EventHandler(this.groupButton_Click);
             // 
-            // tableLayoutPanel1
+            // label3
             // 
-            this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 67F));
-            this.tableLayoutPanel1.Controls.Add(this.blueInput, 2, 1);
-            this.tableLayoutPanel1.Controls.Add(this.greenInput, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.redLable, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.greenLable, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.blueLable, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.redInput, 0, 1);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 47.5F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 52.5F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 38F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(195, 80);
-            this.tableLayoutPanel1.TabIndex = 1;
+            this.label3.Location = new System.Drawing.Point(3, 103);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(200, 16);
+            this.label3.TabIndex = 3;
+            this.label3.Text = "Parameters";
+            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // blueInput
+            // label4
             // 
-            this.blueInput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.blueInput.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.blueInput.Location = new System.Drawing.Point(131, 41);
-            this.blueInput.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.blueInput.Name = "blueInput";
-            this.blueInput.Size = new System.Drawing.Size(61, 27);
-            this.blueInput.TabIndex = 9;
-            // 
-            // greenInput
-            // 
-            this.greenInput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.greenInput.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.greenInput.Location = new System.Drawing.Point(67, 41);
-            this.greenInput.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.greenInput.Name = "greenInput";
-            this.greenInput.Size = new System.Drawing.Size(58, 27);
-            this.greenInput.TabIndex = 8;
-            // 
-            // redLable
-            // 
-            this.redLable.AutoSize = true;
-            this.redLable.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.redLable.Location = new System.Drawing.Point(3, 0);
-            this.redLable.Name = "redLable";
-            this.redLable.Size = new System.Drawing.Size(58, 38);
-            this.redLable.TabIndex = 0;
-            this.redLable.Text = "R";
-            this.redLable.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // greenLable
-            // 
-            this.greenLable.AutoSize = true;
-            this.greenLable.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.greenLable.Location = new System.Drawing.Point(67, 0);
-            this.greenLable.Name = "greenLable";
-            this.greenLable.Size = new System.Drawing.Size(58, 38);
-            this.greenLable.TabIndex = 1;
-            this.greenLable.Text = "G";
-            this.greenLable.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // blueLable
-            // 
-            this.blueLable.AutoSize = true;
-            this.blueLable.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.blueLable.Location = new System.Drawing.Point(131, 0);
-            this.blueLable.Name = "blueLable";
-            this.blueLable.Size = new System.Drawing.Size(61, 38);
-            this.blueLable.TabIndex = 2;
-            this.blueLable.Text = "B";
-            this.blueLable.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // redInput
-            // 
-            this.redInput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.redInput.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.redInput.Location = new System.Drawing.Point(3, 41);
-            this.redInput.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.redInput.Name = "redInput";
-            this.redInput.Size = new System.Drawing.Size(58, 27);
-            this.redInput.TabIndex = 7;
-            this.redInput.Value = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.flowLayoutPanel1.SetFlowBreak(this.label1, true);
-            this.label1.Location = new System.Drawing.Point(3, 144);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(159, 64);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Ctrl+z - отмена\r\nAlt+h - показать все\r\nПКМ по треугольнику - опции";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.label4.Location = new System.Drawing.Point(3, 180);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(200, 16);
+            this.label4.TabIndex = 4;
+            this.label4.Text = "Groups";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // contextMenuStrip1
             // 
@@ -284,6 +231,16 @@
             this.contextMenuStrip2.Name = "contextMenuStrip2";
             this.contextMenuStrip2.Size = new System.Drawing.Size(61, 4);
             // 
+            // groupsContainer
+            // 
+            this.groupsContainer.BackColor = System.Drawing.SystemColors.ButtonShadow;
+            this.groupsContainer.Dock = System.Windows.Forms.DockStyle.Top;
+            this.groupsContainer.Location = new System.Drawing.Point(10, 206);
+            this.groupsContainer.Margin = new System.Windows.Forms.Padding(10);
+            this.groupsContainer.Name = "groupsContainer";
+            this.groupsContainer.Size = new System.Drawing.Size(180, 457);
+            this.groupsContainer.TabIndex = 6;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -295,14 +252,9 @@
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.openGLControl1)).EndInit();
             this.panel1.ResumeLayout(false);
+            this.colorPanel.ResumeLayout(false);
+            this.colorPanel.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
-            this.colorPickPanel.ResumeLayout(false);
-            this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.blueInput)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.greenInput)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.redInput)).EndInit();
             this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -316,18 +268,18 @@
         private System.Windows.Forms.Button drawButton;
         private System.Windows.Forms.Button dragButton;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
-        private System.Windows.Forms.Panel colorPickPanel;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Label redLable;
-        private System.Windows.Forms.Label greenLable;
-        private System.Windows.Forms.Label blueLable;
         private System.Windows.Forms.ToolStripMenuItem changeColorToolStripMenuItem;
-        private System.Windows.Forms.NumericUpDown redInput;
-        private System.Windows.Forms.NumericUpDown blueInput;
-        private System.Windows.Forms.NumericUpDown greenInput;
         private System.Windows.Forms.ToolStripMenuItem hideToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
+        private System.Windows.Forms.ColorDialog colorDialog1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Panel colorPanel;
+        private System.Windows.Forms.Button colorButton;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button groupButton;
+        private System.Windows.Forms.FlowLayoutPanel groupsContainer;
     }
 }
