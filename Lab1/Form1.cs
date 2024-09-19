@@ -451,7 +451,7 @@ namespace Lab1
 
         public void ChangeColor(SimpleColor newColor)
         {
-            foreach (Triangle tri in tris)
+            foreach (IRenderableObject tri in tris)
             {
                 tri.ChangeColor(newColor);
             }
@@ -469,7 +469,7 @@ namespace Lab1
 
         public void Draw(OpenGL gl, bool forceHidden)
         {
-            foreach (Triangle tri in tris)
+            foreach (IRenderableObject tri in tris)
                 tri.Draw(gl, forceHidden);
         }
 
@@ -521,7 +521,7 @@ namespace Lab1
 
         public void Translate(Point delta)
         {
-            foreach (Triangle tri in tris)
+            foreach (IRenderableObject tri in tris)
             {
                 tri.Translate(delta);
             }
@@ -529,7 +529,7 @@ namespace Lab1
 
         public void UpdatePivotPosition()
         {
-            foreach (Triangle tri in tris)
+            foreach (IRenderableObject tri in tris)
                 tri.UpdatePivotPosition();
 
             int xSum = tris.Sum(x => x.GetPivotPosition().x);
