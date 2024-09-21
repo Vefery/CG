@@ -41,18 +41,26 @@
             this.groupButton = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.groupsContainer = new System.Windows.Forms.FlowLayoutPanel();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.changeColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
-            this.groupsContainer = new System.Windows.Forms.FlowLayoutPanel();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.editToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.unhideAllObjectsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.finishEditingTheGroupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deleteTheLastCreatedObjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.openGLControl1)).BeginInit();
             this.panel1.SuspendLayout();
             this.colorPanel.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // openGLControl1
@@ -61,13 +69,13 @@
             this.openGLControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.openGLControl1.DrawFPS = false;
             this.openGLControl1.FrameRate = 60;
-            this.openGLControl1.Location = new System.Drawing.Point(200, 0);
+            this.openGLControl1.Location = new System.Drawing.Point(200, 30);
             this.openGLControl1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.openGLControl1.Name = "openGLControl1";
             this.openGLControl1.OpenGLVersion = SharpGL.Version.OpenGLVersion.OpenGL2_1;
             this.openGLControl1.RenderContextType = SharpGL.RenderContextType.DIBSection;
             this.openGLControl1.RenderTrigger = SharpGL.RenderTrigger.TimerBased;
-            this.openGLControl1.Size = new System.Drawing.Size(1062, 673);
+            this.openGLControl1.Size = new System.Drawing.Size(1062, 643);
             this.openGLControl1.TabIndex = 0;
             this.openGLControl1.OpenGLDraw += new SharpGL.RenderEventHandler(this.openGLControl1_OpenGLDraw);
             this.openGLControl1.Resized += new System.EventHandler(this.openGLControl1_Resized);
@@ -83,7 +91,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Padding = new System.Windows.Forms.Padding(200, 0, 0, 0);
+            this.panel1.Padding = new System.Windows.Forms.Padding(200, 30, 0, 0);
             this.panel1.Size = new System.Drawing.Size(1262, 673);
             this.panel1.TabIndex = 2;
             // 
@@ -118,6 +126,7 @@
             // 
             // flowLayoutPanel1
             // 
+            this.flowLayoutPanel1.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.flowLayoutPanel1.Controls.Add(this.label1);
             this.flowLayoutPanel1.Controls.Add(this.drawButton);
             this.flowLayoutPanel1.Controls.Add(this.dragButton);
@@ -126,8 +135,7 @@
             this.flowLayoutPanel1.Controls.Add(this.colorPanel);
             this.flowLayoutPanel1.Controls.Add(this.label4);
             this.flowLayoutPanel1.Controls.Add(this.groupsContainer);
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Left;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 30);
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(2);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(200, 673);
@@ -175,6 +183,7 @@
             this.groupButton.Text = "Group";
             this.groupButton.UseVisualStyleBackColor = true;
             this.groupButton.Click += new System.EventHandler(this.groupButton_Click);
+            this.groupButton.MouseHover += new System.EventHandler(this.groupButton_MouseHover);
             // 
             // label3
             // 
@@ -193,6 +202,17 @@
             this.label4.TabIndex = 4;
             this.label4.Text = "Groups";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // groupsContainer
+            // 
+            this.groupsContainer.AutoScroll = true;
+            this.groupsContainer.BackColor = System.Drawing.SystemColors.ButtonShadow;
+            this.groupsContainer.Dock = System.Windows.Forms.DockStyle.Top;
+            this.groupsContainer.Location = new System.Drawing.Point(10, 206);
+            this.groupsContainer.Margin = new System.Windows.Forms.Padding(10);
+            this.groupsContainer.Name = "groupsContainer";
+            this.groupsContainer.Size = new System.Drawing.Size(180, 457);
+            this.groupsContainer.TabIndex = 6;
             // 
             // contextMenuStrip1
             // 
@@ -231,21 +251,62 @@
             this.contextMenuStrip2.Name = "contextMenuStrip2";
             this.contextMenuStrip2.Size = new System.Drawing.Size(61, 4);
             // 
-            // groupsContainer
+            // menuStrip1
             // 
-            this.groupsContainer.BackColor = System.Drawing.SystemColors.ButtonShadow;
-            this.groupsContainer.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupsContainer.Location = new System.Drawing.Point(10, 206);
-            this.groupsContainer.Margin = new System.Windows.Forms.Padding(10);
-            this.groupsContainer.Name = "groupsContainer";
-            this.groupsContainer.Size = new System.Drawing.Size(180, 457);
-            this.groupsContainer.TabIndex = 6;
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.editToolStripMenuItem1,
+            this.editToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(1262, 28);
+            this.menuStrip1.TabIndex = 1;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // editToolStripMenuItem
+            // 
+            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
+            this.editToolStripMenuItem.Size = new System.Drawing.Size(55, 24);
+            this.editToolStripMenuItem.Text = "Help";
+            this.editToolStripMenuItem.Click += new System.EventHandler(this.editToolStripMenuItem_Click);
+            // 
+            // editToolStripMenuItem1
+            // 
+            this.editToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.unhideAllObjectsToolStripMenuItem,
+            this.finishEditingTheGroupToolStripMenuItem,
+            this.deleteTheLastCreatedObjectToolStripMenuItem});
+            this.editToolStripMenuItem1.Name = "editToolStripMenuItem1";
+            this.editToolStripMenuItem1.Size = new System.Drawing.Size(49, 24);
+            this.editToolStripMenuItem1.Text = "Edit";
+            // 
+            // unhideAllObjectsToolStripMenuItem
+            // 
+            this.unhideAllObjectsToolStripMenuItem.Name = "unhideAllObjectsToolStripMenuItem";
+            this.unhideAllObjectsToolStripMenuItem.Size = new System.Drawing.Size(288, 26);
+            this.unhideAllObjectsToolStripMenuItem.Text = "Unhide all objects";
+            this.unhideAllObjectsToolStripMenuItem.Click += new System.EventHandler(this.unhideAllObjectsToolStripMenuItem_Click);
+            // 
+            // finishEditingTheGroupToolStripMenuItem
+            // 
+            this.finishEditingTheGroupToolStripMenuItem.Name = "finishEditingTheGroupToolStripMenuItem";
+            this.finishEditingTheGroupToolStripMenuItem.Size = new System.Drawing.Size(288, 26);
+            this.finishEditingTheGroupToolStripMenuItem.Text = "Finish editing the group";
+            this.finishEditingTheGroupToolStripMenuItem.Click += new System.EventHandler(this.finishEditingTheGroupToolStripMenuItem_Click);
+            // 
+            // deleteTheLastCreatedObjectToolStripMenuItem
+            // 
+            this.deleteTheLastCreatedObjectToolStripMenuItem.Name = "deleteTheLastCreatedObjectToolStripMenuItem";
+            this.deleteTheLastCreatedObjectToolStripMenuItem.Size = new System.Drawing.Size(288, 26);
+            this.deleteTheLastCreatedObjectToolStripMenuItem.Text = "Delete the last created object";
+            this.deleteTheLastCreatedObjectToolStripMenuItem.Click += new System.EventHandler(this.deleteTheLastCreatedObjectToolStripMenuItem_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1262, 673);
+            this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.flowLayoutPanel1);
             this.Controls.Add(this.panel1);
             this.Name = "Form1";
@@ -256,7 +317,10 @@
             this.colorPanel.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -281,5 +345,12 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button groupButton;
         private System.Windows.Forms.FlowLayoutPanel groupsContainer;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem unhideAllObjectsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem finishEditingTheGroupToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deleteTheLastCreatedObjectToolStripMenuItem;
     }
 }

@@ -222,17 +222,12 @@ namespace Lab1
         {
             if (e.KeyCode == Keys.Back)
             {
-                // Удаляю последний треугольник, если есть
-                if (tris.Count > 0)
-                {
-                    tris.RemoveAt(tris.Count - 1);
-                }
+                DeleteLastObject();
             }
             else if (e.KeyCode == Keys.H && e.Modifiers == Keys.Alt)
             {
-                // Прохожу по всем треугольникам и убираю скрытие
-                for (int i = 0; i < tris.Count; i++)
-                    tris[i].hidden = false;
+                e.SuppressKeyPress = true;
+                UnhideAllObjects();
             }
             else if (e.KeyCode == Keys.Enter)
             {
@@ -263,16 +258,34 @@ namespace Lab1
             }
             else if (e.KeyCode == Keys.F)
             {
-                if (editedGroup is null)
-                    return;
-
-                tris = backupPointer;
-                editedGroup.isBeingEdited = false;
-                editedGroup = null;
-
-                foreach (TrianglesGroupUC groupPanel in groupsContainer.Controls)
-                    groupPanel.SwitchButton(true);
+                FinishEditingGroup();
             }
+        }
+        private void DeleteLastObject()
+        {
+            // Удаляю последний треугольник, если есть
+            if (tris.Count > 0)
+            {
+                tris.RemoveAt(tris.Count - 1);
+            }
+        }
+        private void UnhideAllObjects()
+        {
+            // Прохожу по всем треугольникам и убираю скрытие
+            for (int i = 0; i < tris.Count; i++)
+                tris[i].hidden = false;
+        }
+        private void FinishEditingGroup()
+        {
+            if (editedGroup is null)
+                return;
+
+            tris = backupPointer;
+            editedGroup.isBeingEdited = false;
+            editedGroup = null;
+
+            foreach (TrianglesGroupUC groupPanel in groupsContainer.Controls)
+                groupPanel.SwitchButton(true);
         }
         private void StartEditingGroup(TriangleGroup group)
         {
@@ -346,6 +359,31 @@ namespace Lab1
         private void groupButton_Click(object sender, EventArgs e)
         {
             mode = Mode.Grouping;
+        }
+
+        private void editToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Backspace - Delete the last created object\nAlt+H - Unhide all objects\nF - Finish editing a group", "Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void groupButton_MouseHover(object sender, EventArgs e)
+        {
+            toolTip1.Show("Select multiple objects and then press ENTER to group them", groupButton);
+        }
+
+        private void unhideAllObjectsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UnhideAllObjects();
+        }
+
+        private void finishEditingTheGroupToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FinishEditingGroup();
+        }
+
+        private void deleteTheLastCreatedObjectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DeleteLastObject();
         }
     }
     public class Triangle : IRenderableObject
@@ -470,7 +508,7 @@ namespace Lab1
         public void Draw(OpenGL gl, bool forceHidden)
         {
             foreach (IRenderableObject tri in tris)
-                tri.Draw(gl, forceHidden);
+                tri.Draw(gl, forceHidden || hidden);
         }
 
         public Point GetPivotPosition()
