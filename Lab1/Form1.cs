@@ -63,6 +63,17 @@ namespace Lab1
             b = color.B;
         }
     }
+    public struct UndoInfo
+    {
+        public IRenderableObject obj;
+        public Point delta;
+
+        public UndoInfo(IRenderableObject movedObj, Point delta)
+        {
+            this.delta = delta;
+            obj = movedObj;
+        }
+    }
     public interface IRenderableObject
     {
         bool hidden { set; get; }
@@ -78,13 +89,16 @@ namespace Lab1
     {
         OpenGL gl;
         Mode mode = Mode.Drawing;
-        List<IRenderableObject> tris = new List<IRenderableObject>();
+        List<IRenderableObject> objects = new List<IRenderableObject>();
         List<IRenderableObject> backupPointer;
         List<int> groupingBuffer = new List<int>();
+        List<UndoInfo> undoBuffer = new List<UndoInfo>();
         Point[] pointsBuffer = new Point[3];
         Point prevMouseLocation;
+        Point startMovingLocation;
         byte pointsInBuffer = 0;
         int selectedObject = -1;
+        int maxUndoBufferSize = 256;
         TriangleGroup editedGroup;
 
         public Form1()
@@ -98,7 +112,7 @@ namespace Lab1
             // Цикл отрисовки всех треугольников
             if (editedGroup is null)
             {
-                foreach (IRenderableObject tri in tris)
+                foreach (IRenderableObject tri in objects)
                 {
                     tri.Draw(gl, false);
                 }
@@ -110,7 +124,7 @@ namespace Lab1
                     if (tri != editedGroup)
                         tri.Draw(gl, true);
                 }
-                foreach (IRenderableObject tri in tris)
+                foreach (IRenderableObject tri in objects)
                 {
                     tri.Draw(gl, false);
                 }
@@ -153,7 +167,7 @@ namespace Lab1
                         pointsInBuffer = 0;
                         Triangle newTri = new Triangle(pointsBuffer[0], pointsBuffer[1], pointsBuffer[2]);
 
-                        tris.Add(newTri);
+                        objects.Add(newTri);
                     }
                 } 
                 else if (mode == Mode.Dragging)
@@ -166,8 +180,8 @@ namespace Lab1
                     // Если нашелся треугольник, запоминаем его и запоминаем координаты клика
                     if (selectedObject != -1)
                     {
-                        prevMouseLocation.x = p.x;
-                        prevMouseLocation.y = p.y;
+                        prevMouseLocation = p;
+                        startMovingLocation = p;
                     }
                 } 
                 else if (mode == Mode.Grouping)
@@ -197,9 +211,9 @@ namespace Lab1
         private int CheckForObject(Point mousePos)
         {
             int result = -1;
-            for (int i = tris.Count - 1; i >= 0 && result == -1; i--)
+            for (int i = objects.Count - 1; i >= 0 && result == -1; i--)
             {
-                if (tris[i].CheckIfPointInside(mousePos) && !tris[i].hidden)
+                if (objects[i].CheckIfPointInside(mousePos) && !objects[i].hidden)
                 {
                     // Если попали в треугольник, возвращаем его
                     result = i;
@@ -236,16 +250,16 @@ namespace Lab1
                     TriangleGroup group = new TriangleGroup();
 
                     foreach (int num in groupingBuffer)
-                        group.tris.Add(tris[num]);
+                        group.tris.Add(objects[num]);
 
                     foreach (int num in groupingBuffer)
-                        tris[num] = null;
-                    tris.RemoveAll(x => x == null);
+                        objects[num] = null;
+                    objects.RemoveAll(x => x == null);
 
                     groupingBuffer.Clear();
-                    tris.Add(group);
+                    objects.Add(group);
 
-                    TrianglesGroupUC newGroup = new TrianglesGroupUC((TriangleGroup)tris.Last(), $"Group {groupsContainer.Controls.Count}");
+                    TrianglesGroupUC newGroup = new TrianglesGroupUC((TriangleGroup)objects.Last(), $"Group {groupsContainer.Controls.Count}");
                     newGroup.onStartEdit += StartEditingGroup;
                     groupsContainer.Controls.Add(newGroup);
                 }
@@ -260,27 +274,31 @@ namespace Lab1
             {
                 FinishEditingGroup();
             }
+            else if (e.KeyCode == Keys.Z && e.Modifiers == Keys.Control)
+            {
+                Undo();
+            }
         }
         private void DeleteLastObject()
         {
             // Удаляю последний треугольник, если есть
-            if (tris.Count > 0)
+            if (objects.Count > 0)
             {
-                tris.RemoveAt(tris.Count - 1);
+                objects.RemoveAt(objects.Count - 1);
             }
         }
         private void UnhideAllObjects()
         {
             // Прохожу по всем треугольникам и убираю скрытие
-            for (int i = 0; i < tris.Count; i++)
-                tris[i].hidden = false;
+            for (int i = 0; i < objects.Count; i++)
+                objects[i].hidden = false;
         }
         private void FinishEditingGroup()
         {
             if (editedGroup is null)
                 return;
 
-            tris = backupPointer;
+            objects = backupPointer;
             editedGroup.isBeingEdited = false;
             editedGroup = null;
 
@@ -292,11 +310,21 @@ namespace Lab1
             foreach (TrianglesGroupUC groupPanel in groupsContainer.Controls)
                 groupPanel.SwitchButton(false);
 
-            backupPointer = tris;
-            tris = group.tris;
+            backupPointer = objects;
+            objects = group.tris;
             editedGroup = group;
             editedGroup.isBeingEdited = true;
             editedGroup.hidden = false;
+        }
+        private void Undo()
+        {
+            if (undoBuffer.Count > 0)
+            {
+                UndoInfo undoInfo = undoBuffer.Last();
+                undoBuffer.RemoveAt(undoBuffer.Count - 1);
+
+                undoInfo.obj.Translate(undoInfo.delta);
+            }
         }
         // Ивент движения мыши по области OGL
         private void openGLControl1_MouseMove(object sender, MouseEventArgs e)
@@ -306,7 +334,7 @@ namespace Lab1
                 // Дельта перемещения мыши
                 Point delta = new Point((short)(e.X - prevMouseLocation.x), (short)(e.Y - prevMouseLocation.y));
                 
-                IRenderableObject curObj = tris[selectedObject];
+                IRenderableObject curObj = objects[selectedObject];
                 // Просто добавляю дельту ко всем координатам
                 curObj.Translate(delta);
                 curObj.UpdatePivotPosition();
@@ -330,24 +358,35 @@ namespace Lab1
         private void openGLControl1_MouseUp(object sender, MouseEventArgs e)
         {
             if (mode == Mode.Dragging && e.Button == MouseButtons.Left)
+            {
+                if (selectedObject != -1)
+                {
+                    Point delta = new Point((short)(startMovingLocation.x - e.X), (short)(startMovingLocation.y - e.Y));
+
+                    UndoInfo newUndo = new UndoInfo(objects[selectedObject], delta);
+                    undoBuffer.Add(newUndo);
+                    if (undoBuffer.Count > maxUndoBufferSize)
+                        undoBuffer.RemoveAt(0);
+                }
                 selectedObject = -1;
+            }
         }
         // Ивент кнопки смены цвета из контекстного меню
         private void changeColorToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (colorDialog1.ShowDialog() == DialogResult.OK)
-                tris[selectedObject].ChangeColor(new SimpleColor(colorDialog1.Color));
+                objects[selectedObject].ChangeColor(new SimpleColor(colorDialog1.Color));
         }
         // Ивент кнопки скрыть из контекстного меню
         private void hideToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tris[selectedObject].hidden = true;
+            objects[selectedObject].hidden = true;
             selectedObject = -1;
         }
         // Ивент кнопки удалить из контекстного меню
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            tris.RemoveAt(selectedObject);
+            objects.RemoveAt(selectedObject);
         }
 
         private void colorButton_Click(object sender, EventArgs e)
