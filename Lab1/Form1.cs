@@ -424,6 +424,11 @@ namespace Lab1
         {
             DeleteLastObject();
         }
+
+        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Undo();
+        }
     }
     public class Triangle : IRenderableObject
     {

@@ -49,12 +49,13 @@
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.editToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.unhideAllObjectsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.finishEditingTheGroupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteTheLastCreatedObjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.undoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.openGLControl1)).BeginInit();
             this.panel1.SuspendLayout();
             this.colorPanel.SuspendLayout();
@@ -263,16 +264,10 @@
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
-            // editToolStripMenuItem
-            // 
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(55, 24);
-            this.editToolStripMenuItem.Text = "Help";
-            this.editToolStripMenuItem.Click += new System.EventHandler(this.editToolStripMenuItem_Click);
-            // 
             // editToolStripMenuItem1
             // 
             this.editToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.undoToolStripMenuItem,
             this.unhideAllObjectsToolStripMenuItem,
             this.finishEditingTheGroupToolStripMenuItem,
             this.deleteTheLastCreatedObjectToolStripMenuItem});
@@ -300,6 +295,20 @@
             this.deleteTheLastCreatedObjectToolStripMenuItem.Size = new System.Drawing.Size(288, 26);
             this.deleteTheLastCreatedObjectToolStripMenuItem.Text = "Delete the last created object";
             this.deleteTheLastCreatedObjectToolStripMenuItem.Click += new System.EventHandler(this.deleteTheLastCreatedObjectToolStripMenuItem_Click);
+            // 
+            // editToolStripMenuItem
+            // 
+            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
+            this.editToolStripMenuItem.Size = new System.Drawing.Size(55, 24);
+            this.editToolStripMenuItem.Text = "Help";
+            this.editToolStripMenuItem.Click += new System.EventHandler(this.editToolStripMenuItem_Click);
+            // 
+            // undoToolStripMenuItem
+            // 
+            this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
+            this.undoToolStripMenuItem.Size = new System.Drawing.Size(288, 26);
+            this.undoToolStripMenuItem.Text = "Undo";
+            this.undoToolStripMenuItem.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -352,5 +361,6 @@
         private System.Windows.Forms.ToolStripMenuItem unhideAllObjectsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem finishEditingTheGroupToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem deleteTheLastCreatedObjectToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem undoToolStripMenuItem;
     }
 }
