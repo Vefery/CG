@@ -20,17 +20,13 @@ namespace Lab1
         {
             InitializeComponent();
             this.assignedGroup = assignedGroup;
+            assignedGroup.onDeleted += () => this.Dispose();
             groupName.Text = name;
         }
 
         public void SwitchButton(bool enable)
         {
             editButton.Enabled = enable;
-        }
-
-        private void TrianglesGroup_Load(object sender, EventArgs e)
-        {
-
         }
 
         private void editButton_Click(object sender, EventArgs e)

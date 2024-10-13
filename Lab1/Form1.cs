@@ -1,13 +1,8 @@
 ﻿using SharpGL;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Lab1
@@ -17,7 +12,8 @@ namespace Lab1
     {
         Drawing,
         Dragging,
-        Grouping
+        Grouping,
+        DrawingGroup
     }
     public struct Point
     {
@@ -84,14 +80,15 @@ namespace Lab1
         bool CheckIfPointInside(Point p);
         void HandleOutOfBounds(Control control);
         void ChangeColor(SimpleColor newColor);
+        void Delete();
     }
     public partial class Form1 : Form
     {
         OpenGL gl;
-        Mode mode = Mode.Drawing;
+        Mode mode = Mode.DrawingGroup;
         List<IRenderableObject> objects = new List<IRenderableObject>();
         List<IRenderableObject> backupPointer;
-        List<int> groupingBuffer = new List<int>();
+        List<IRenderableObject> groupingBuffer = new List<IRenderableObject>();
         List<UndoInfo> undoBuffer = new List<UndoInfo>();
         Point[] pointsBuffer = new Point[3];
         Point prevMouseLocation;
@@ -169,7 +166,24 @@ namespace Lab1
 
                         objects.Add(newTri);
                     }
-                } 
+                }
+                else if (mode == Mode.DrawingGroup)
+                {
+                    // Создаем точку с координатами клика и добавляем в буфер
+                    Point clickPoint = new Point((short)e.Location.X, (short)e.Location.Y, new SimpleColor(colorButton.BackColor.R, colorButton.BackColor.G, colorButton.BackColor.B));
+                    pointsBuffer[pointsInBuffer] = clickPoint;
+                    pointsInBuffer++;
+
+                    // Если буфер полный создаем треугольник и добавляем его
+                    if (pointsInBuffer > 2)
+                    {
+                        pointsInBuffer = 0;
+                        Triangle newTri = new Triangle(pointsBuffer[0], pointsBuffer[1], pointsBuffer[2]);
+
+                        objects.Add(newTri);
+                        groupingBuffer.Add(newTri);
+                    }
+                }
                 else if (mode == Mode.Dragging)
                 {
                     // Создаем точку в месте клика
@@ -191,8 +205,8 @@ namespace Lab1
 
                     selectedObject = CheckForObject(p);
 
-                    if (selectedObject != -1 && !groupingBuffer.Contains(selectedObject))
-                        groupingBuffer.Add(selectedObject);
+                    if (selectedObject != -1 && !groupingBuffer.Contains(objects[selectedObject]))
+                        groupingBuffer.Add(objects[selectedObject]);
 
                     selectedObject = -1;
                 }
@@ -245,30 +259,7 @@ namespace Lab1
             }
             else if (e.KeyCode == Keys.Enter)
             {
-                if (groupingBuffer.Count > 1)
-                {
-                    TriangleGroup group = new TriangleGroup();
-
-                    foreach (int num in groupingBuffer)
-                        group.tris.Add(objects[num]);
-
-                    foreach (int num in groupingBuffer)
-                        objects[num] = null;
-                    objects.RemoveAll(x => x == null);
-
-                    groupingBuffer.Clear();
-                    objects.Add(group);
-
-                    TrianglesGroupUC newGroup = new TrianglesGroupUC((TriangleGroup)objects.Last(), $"Group {groupsContainer.Controls.Count}");
-                    newGroup.onStartEdit += StartEditingGroup;
-                    groupsContainer.Controls.Add(newGroup);
-                }
-                else
-                {
-                    // Error here
-                    MessageBox.Show("At least 2 objects must be selected in order to make a group!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    groupingBuffer.Clear();
-                }
+                FinishMakingGroup();
             }
             else if (e.KeyCode == Keys.F)
             {
@@ -284,7 +275,52 @@ namespace Lab1
             // Удаляю последний треугольник, если есть
             if (objects.Count > 0)
             {
+                IRenderableObject temp = objects.Last();
                 objects.RemoveAt(objects.Count - 1);
+                groupingBuffer.Remove(temp);
+                temp.Delete();
+            }
+        }
+        private void DeleteObject(int index)
+        {
+            IRenderableObject temp = objects[index];
+            objects.RemoveAt(index);
+            groupingBuffer.Remove(temp);
+            temp.Delete();
+        }
+        private void ChangeMode(Mode newMode)
+        {
+            if (mode != newMode)
+            {
+                mode = newMode;
+                groupingBuffer.Clear();
+            }
+        }
+        private void FinishMakingGroup()
+        {
+            if (groupingBuffer.Count > 1)
+            {
+                TriangleGroup group = new TriangleGroup();
+
+                foreach (IRenderableObject obj in groupingBuffer)
+                    group.tris.Add(obj);
+
+                foreach (IRenderableObject obj in groupingBuffer)
+                    objects.Remove(obj);
+
+                groupingBuffer.Clear();
+                objects.Add(group);
+
+                TrianglesGroupUC newGroup = new TrianglesGroupUC((TriangleGroup)objects.Last(), $"Группа {groupsContainer.Controls.Count}");
+                newGroup.onStartEdit += StartEditingGroup;
+                groupsContainer.Controls.Add(newGroup);
+                if (editedGroup != null)
+                    newGroup.SwitchButton(false);
+            }
+            else
+            {
+                // Error here
+                MessageBox.Show("Для создания группы должно быть выдлено как минимум 2 объекта!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         private void UnhideAllObjects()
@@ -298,8 +334,11 @@ namespace Lab1
             if (editedGroup is null)
                 return;
 
+            finishEditingTheGroupToolStripMenuItem.Enabled = false;
+
             objects = backupPointer;
             editedGroup.isBeingEdited = false;
+            editedGroup.UnhideAll();
             editedGroup = null;
 
             foreach (TrianglesGroupUC groupPanel in groupsContainer.Controls)
@@ -309,6 +348,9 @@ namespace Lab1
         {
             foreach (TrianglesGroupUC groupPanel in groupsContainer.Controls)
                 groupPanel.SwitchButton(false);
+
+            finishEditingTheGroupToolStripMenuItem.Enabled = true;
+            ChangeMode(Mode.Drawing);
 
             backupPointer = objects;
             objects = group.tris;
@@ -347,12 +389,12 @@ namespace Lab1
         }
         private void drawButton_Click(object sender, EventArgs e)
         {
-            mode = Mode.Drawing;
+            ChangeMode(Mode.Drawing);
         }
 
         private void dragButton_Click(object sender, EventArgs e)
         {
-            mode = Mode.Dragging;
+            ChangeMode(Mode.Dragging);
         }
 
         private void openGLControl1_MouseUp(object sender, MouseEventArgs e)
@@ -361,9 +403,10 @@ namespace Lab1
             {
                 if (selectedObject != -1)
                 {
-                    Point delta = new Point((short)(startMovingLocation.x - e.X), (short)(startMovingLocation.y - e.Y));
-
-                    UndoInfo newUndo = new UndoInfo(objects[selectedObject], delta);
+                    IRenderableObject temp = objects[selectedObject];
+                    Point delta = new Point((short)(startMovingLocation.x - temp.GetPivotPosition().x), (short)(startMovingLocation.y - temp.GetPivotPosition().y));
+                    
+                    UndoInfo newUndo = new UndoInfo(temp, delta);
                     undoBuffer.Add(newUndo);
                     if (undoBuffer.Count > maxUndoBufferSize)
                         undoBuffer.RemoveAt(0);
@@ -386,7 +429,7 @@ namespace Lab1
         // Ивент кнопки удалить из контекстного меню
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            objects.RemoveAt(selectedObject);
+            DeleteObject(selectedObject);
         }
 
         private void colorButton_Click(object sender, EventArgs e)
@@ -397,17 +440,17 @@ namespace Lab1
 
         private void groupButton_Click(object sender, EventArgs e)
         {
-            mode = Mode.Grouping;
+            ChangeMode(Mode.Grouping);
         }
 
         private void editToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Backspace - Delete the last created object\nAlt+H - Unhide all objects\nF - Finish editing a group", "Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Backspace - Удалить последний созданный объект\nAlt+H - Показать все объекты\nF - завершить редактирование группы", "Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void groupButton_MouseHover(object sender, EventArgs e)
         {
-            toolTip1.Show("Select multiple objects and then press ENTER to group them", groupButton);
+            toolTip1.Show("Выделите несколько групп и нажмите ENTER чтобы сгруппировать их", groupButton);
         }
 
         private void unhideAllObjectsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -428,6 +471,16 @@ namespace Lab1
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Undo();
+        }
+
+        private void drawGroupButton_Click(object sender, EventArgs e)
+        {
+            ChangeMode(Mode.DrawingGroup);
+        }
+
+        private void finishMakingGroupToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FinishMakingGroup();
         }
     }
     public class Triangle : IRenderableObject
@@ -522,6 +575,8 @@ namespace Lab1
             point2.color = newColor;
             point3.color = newColor;
         }
+
+        public void Delete() { }
     }
 
     public class TriangleGroup : IRenderableObject
@@ -530,6 +585,9 @@ namespace Lab1
         public bool isBeingEdited = false;
         public List<IRenderableObject> tris = new List<IRenderableObject>();
         public Point pivot;
+
+        public delegate void OnDeleted();
+        public OnDeleted onDeleted;
 
         public void ChangeColor(SimpleColor newColor)
         {
@@ -564,39 +622,35 @@ namespace Lab1
         {
             if (pivot.x < 0)
             {
-                foreach(Triangle tri in tris)
+                foreach(IRenderableObject tri in tris)
                 {
-                    tri.point1.x -= pivot.x;
-                    tri.point2.x -= pivot.x;
-                    tri.point3.x -= pivot.x;
+                    Point p = new Point((short)(-pivot.x), 0);
+                    tri.Translate(p);
                 }
                 
             }
             else if (pivot.x > control.Width)
             {
-                foreach(Triangle tri in tris)
+                foreach(IRenderableObject tri in tris)
                 {
-                    tri.point1.x -= (short)(pivot.x - control.Width);
-                    tri.point2.x -= (short)(pivot.x - control.Width);
-                    tri.point3.x -= (short)(pivot.x - control.Width);
+                    Point p = new Point((short)(control.Width - pivot.x), 0);
+                    tri.Translate(p);
                 }
             }
             if (pivot.y < 0)
             {
-                foreach(Triangle tri in tris)
+                foreach(IRenderableObject tri in tris)
                 {
-                    tri.point1.y -= pivot.y;
-                    tri.point2.y -= pivot.y;
-                    tri.point3.y -= pivot.y;
+                    Point p = new Point(0, (short)(-pivot.y));
+                    tri.Translate(p);
                 }
             }
             else if (pivot.y > control.Height)
             {
-                foreach(Triangle tri in tris)
+                foreach(IRenderableObject tri in tris)
                 {
-                    tri.point1.y -= (short)(pivot.y - control.Height);
-                    tri.point2.y -= (short)(pivot.y - control.Height);
-                    tri.point3.y -= (short)(pivot.y - control.Height);
+                    Point p = new Point(0, (short)(control.Height - pivot.y));
+                    tri.Translate(p);
                 }
             }
         }
@@ -609,6 +663,11 @@ namespace Lab1
             }
         }
 
+        public void UnhideAll()
+        {
+            foreach (IRenderableObject obj in tris)
+                obj.hidden = false;
+        }
         public void UpdatePivotPosition()
         {
             foreach (IRenderableObject tri in tris)
@@ -619,6 +678,11 @@ namespace Lab1
 
             pivot.x = (short)(xSum / tris.Count);
             pivot.y = (short)(ySum / tris.Count);
+        }
+
+        public void Delete()
+        {
+            onDeleted?.Invoke();
         }
     }
 }

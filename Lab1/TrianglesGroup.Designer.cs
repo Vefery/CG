@@ -43,11 +43,12 @@
             // 
             // editButton
             // 
-            this.editButton.Location = new System.Drawing.Point(71, 10);
+            this.editButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.editButton.Location = new System.Drawing.Point(97, 10);
             this.editButton.Name = "editButton";
             this.editButton.Size = new System.Drawing.Size(100, 23);
             this.editButton.TabIndex = 1;
-            this.editButton.Text = "Edit group";
+            this.editButton.Text = "Изменить";
             this.editButton.UseVisualStyleBackColor = true;
             this.editButton.Click += new System.EventHandler(this.editButton_Click);
             // 
@@ -59,8 +60,7 @@
             this.Controls.Add(this.editButton);
             this.Controls.Add(this.groupName);
             this.Name = "TrianglesGroupUC";
-            this.Size = new System.Drawing.Size(174, 42);
-            this.Load += new System.EventHandler(this.TrianglesGroup_Load);
+            this.Size = new System.Drawing.Size(209, 42);
             this.ResumeLayout(false);
 
         }
