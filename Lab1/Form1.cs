@@ -1,31 +1,54 @@
 ﻿using SharpGL;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace Lab1
 {
+    public struct Vertex
+    {
+        public Point location;
+        public List<Point> normals { get; }
+        public Vertex(Point location, Point normal)
+        {
+            this.location = location;
+            normals = new List<Point>() { normal };
+        }
+        public Vertex(Point location)
+        {
+            this.location = location;
+            normals = new List<Point>();
+        }
+        public void AddNormal(Point newNormal)
+        {
+            normals.Add(newNormal.Normalized());
+        }
+    }
     public struct Point
     {
         public float x, y, z;
-        public SimpleColor color;
 
         public Point(float newX, float newY, float newZ)
         {
             x = newX;
             y = newY;
             z = newZ;
-            color = new SimpleColor();
         }
-        public Point(float newX, float newY, float newZ, SimpleColor newColor)
+
+        public float[] ToArray()
         {
-            x = newX;
-            y = newY;
-            z = newZ;
-            color = newColor;
+            return new float[] { x, y, z };
+        }
+        private float Length()
+        {
+            return (float)Math.Sqrt(x * x + y * y + z * z);
+        }
+        public Point Normalized()
+        {
+            float length = Length();
+            return new Point(x / length, y / length, z / length);
         }
         public static Point operator +(Point a, Point b)
         {
@@ -33,35 +56,39 @@ namespace Lab1
             t.x = a.x + b.x;
             t.y = a.y + b.y;
             t.z = a.z + b.z;
-            t.color = a.color;
             return t;
         }
-    }
-    // В c# и так есть Color, но он слишком комплексный
-    public struct SimpleColor
-    {
-        public byte r, g, b;
-
-        public SimpleColor(byte newR, byte newG, byte newB)
+        public static Point operator -(Point a, Point b)
         {
-            r = newR;
-            g = newG;
-            b = newB;
+            Point t;
+            t.x = a.x - b.x;
+            t.y = a.y - b.y;
+            t.z = a.z - b.z;
+            return t;
         }
-        public SimpleColor(Color color)
+        public static bool operator ==(Point a, Point b)
         {
-            r = color.R;
-            g = color.G;
-            b = color.B;
+            if ((a.x - b.x < 1e-7f) && (a.y - b.y < 1e-7f) && (a.z - b.z < 1e-7f))
+                return true;
+            else
+                return false;
+        }
+        public static bool operator !=(Point a, Point b)
+        {
+            if ((a.x - b.x >= 1e-7f) && (a.y - b.y >= 1e-7f) && (a.z - b.z >= 1e-7f))
+                return true;
+            else
+                return false;
         }
     }
     public partial class Form1 : Form
     {
         OpenGL gl;
-        List<Point> vertices = new List<Point>();
+        List<Vertex> vertices = new List<Vertex>();
         List<Point> slice = new List<Point>(6);
         List<Point> trajectory = new List<Point>();
         Point prevMouseLocation;
+        int sliceVertices;
 
         public Form1()
         {
@@ -75,6 +102,7 @@ namespace Lab1
                     string[] coords = line.Split(' ');
                     slice.Add(new Point(float.Parse(coords[0]), float.Parse(coords[1]), 0));
                 }
+                sliceVertices = slice.Count;
             }
             using (StreamReader filein = new StreamReader("../../traj.txt"))
             {
@@ -86,33 +114,106 @@ namespace Lab1
                 }
             }
         }
+        private Point CrossProduct(Point a, Point b)
+        {
+            return new Point(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+        }
+        private Point ChooseNormal(Vertex a, Vertex b)
+        {
+            return a.normals.Intersect(b.normals).ToList()[0];
+        }
+        private void DrawGrid()
+        {
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_AMBIENT, new float[] { 0f, 0f, 0f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_DIFFUSE, new float[] { 0f, 0f, 0f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_EMISSION, new float[] { 0.5f, 0.5f, 0.5f, 1f });
+            for (float i = -100; i <= 100; i += 5)
+            {
+                gl.Begin(OpenGL.GL_LINES);
+                // Ось Х
+                gl.Vertex(-100, 0, i);
+                gl.Vertex(100, 0, i);
+
+                // Ось Z
+                gl.Vertex(i, 0, -100);
+                gl.Vertex(i, 0, 100);
+                gl.End();
+            }
+
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_AMBIENT, new float[] { 0.2f, 0.2f, 0.2f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_DIFFUSE, new float[] { 0.8f, 0.8f, 0.8f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_EMISSION, new float[] { 0f, 0f, 0f, 1f });
+        }
+
+        private void DrawNormals()
+        {
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_AMBIENT, new float[] { 0f, 0f, 0f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_DIFFUSE, new float[] { 0f, 0f, 0f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_EMISSION, new float[] { 1f, 0.5f, 0.5f, 1f });
+            
+            foreach (Vertex vertex in vertices)
+            {
+                foreach (Point normal in vertex.normals)
+                {
+                    gl.Begin(OpenGL.GL_LINES);
+                    gl.Vertex(vertex.location.ToArray());
+                    gl.Vertex((vertex.location + normal).ToArray());
+                    gl.End();
+                }
+            }
+
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_AMBIENT, new float[] { 0.2f, 0.2f, 0.2f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_DIFFUSE, new float[] { 0.8f, 0.8f, 0.8f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_EMISSION, new float[] { 0f, 0f, 0f, 1f });
+        }
         // Update функция OGL, вызывается каждый кадр
         private void openGLControl1_OpenGLDraw(object sender, RenderEventArgs args)
         {
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);  // Очистка экрана и буфера глубины
             gl.Rotate(0, 1, 0);
+
+            DrawGrid();
+            DrawNormals();
+
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_EMISSION, new float[] { 0f, 0f, 0f, 1f });
+            // Отрисовка сечений
+            gl.PolygonMode(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_FILL);
             gl.Begin(OpenGL.GL_POLYGON);
-            // Отрисовка первого сечения
-            gl.Normal(0, 0, -1);
-            foreach (Point p in slice)
-            {
-                gl.Vertex(p.x, p.y, p.z);
-            }
-            gl.End();
-            gl.Begin(OpenGL.GL_POLYGON);
-            gl.Normal(0, 0, 1);
-            foreach (Point p in slice.Select(x => x + trajectory.Last()))
-            {
-                gl.Vertex(p.x, p.y, p.z);
-            }
+            gl.Normal(vertices[0].normals[0].ToArray());
+            foreach (Point p in slice.Select(x => x + trajectory[0]))
+                gl.Vertex(p.ToArray());
             gl.End();
 
-            /*gl.Begin(OpenGL.GL_QUADS);
-            foreach (Point p in vertices)
+            gl.Begin(OpenGL.GL_POLYGON);
+            gl.Normal(vertices.Last().normals.Last().ToArray());
+            foreach (Point p in slice.Select(x => x + trajectory.Last()))
+                gl.Vertex(p.ToArray());
+            gl.End();
+
+            // Отрисовка ребер
+            gl.Begin(OpenGL.GL_QUADS);
+            for (int i = 0; i < trajectory.Count() - 1; i++)
             {
-                gl.Vertex(p.x, p.y, p.z);
+                int offset = i * sliceVertices;
+                Point normal;
+                for (int j = offset; j < offset + sliceVertices - 1; j++)
+                {
+                    normal = ChooseNormal(vertices[j], vertices[j + 1 + sliceVertices]);
+                    gl.Normal(normal.ToArray());
+                    gl.Vertex(vertices[j].location.ToArray());
+                    gl.Vertex(vertices[j + 1].location.ToArray());
+                    gl.Vertex(vertices[j + 1 + sliceVertices].location.ToArray());
+                    gl.Vertex(vertices[j + sliceVertices].location.ToArray());
+                }
+                normal = ChooseNormal(vertices[offset + sliceVertices - 1], vertices[offset + sliceVertices]);
+                gl.Normal(normal.ToArray());
+                gl.Vertex(vertices[offset + sliceVertices - 1].location.ToArray());
+                gl.Vertex(vertices[offset + 2 * sliceVertices - 1].location.ToArray());
+                gl.Vertex(vertices[offset + sliceVertices].location.ToArray());
+                gl.Vertex(vertices[offset].location.ToArray());
+
             }
-            gl.End();*/
+            gl.End();
 
             gl.Finish();
         }
@@ -123,32 +224,47 @@ namespace Lab1
 
             gl.Enable(OpenGL.GL_DEPTH_TEST);
             gl.Enable(OpenGL.GL_LIGHTING);
-            gl.Enable(OpenGL.GL_DEPTH_TEST);
-            gl.Enable(OpenGL.GL_LIGHTING);
             gl.Enable(OpenGL.GL_LIGHT0);
             gl.Enable(OpenGL.GL_NORMALIZE);
             gl.LightModel(OpenGL.GL_LIGHT_MODEL_TWO_SIDE, OpenGL.GL_TRUE);
-            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, new float[] { 0, 0, -1, 0 });
+            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, new float[] { 0, 0, 1000, 1 });
 
             // Просчет точек и нормалей
-            List<Point> slice_start;
-            List<Point> slice_end;
-            for (int i = 0; i < trajectory.Count - 1; i++)
+            List<Point> slice_start = slice.Select(x => x + trajectory[0]).ToList();
+            List<Point> slice_next;
+
+            foreach (Point p in slice_start)
+                vertices.Add(new Vertex(p));
+
+            for (int i = 0; i < sliceVertices; i++)
+                vertices[i].AddNormal(new Point(0, 0, -1));
+
+            for (int i = 1; i < trajectory.Count; i++)
             {
-                slice_start = slice.Select(x => x + trajectory[i]).ToList();
-                slice_end = slice.Select(x => x + trajectory[i + 1]).ToList();
-                for (int j = 0; j < slice_start.Count - 1; j++)
+                slice_next = slice.Select(x => x + trajectory[i]).ToList();
+
+                foreach (Point p in slice_next)
+                    vertices.Add(new Vertex(p));
+
+                Point normal;
+                int offset = i * sliceVertices;
+                for (int j = offset; j < offset + sliceVertices - 1; j++)
                 {
-                    vertices.Add(slice_start[j]);
-                    vertices.Add(slice_end[j]);
-                    vertices.Add(slice_end[j + 1]);
-                    vertices.Add(slice_start[j + 1]);
+                    normal = CrossProduct(vertices[j + 1].location - vertices[j - sliceVertices].location, vertices[j].location - vertices[j - sliceVertices].location);
+                    vertices[j].AddNormal(normal);
+                    vertices[j + 1].AddNormal(normal);
+                    vertices[j - sliceVertices].AddNormal(normal);
+                    vertices[j - sliceVertices + 1].AddNormal(normal);
                 }
-                vertices.Add(slice_start[slice_start.Count - 1]);
-                vertices.Add(slice_end[slice_start.Count - 1]);
-                vertices.Add(slice_end[0]);
-                vertices.Add(slice_start[0]);
+                normal = CrossProduct(vertices[offset].location - vertices[offset - 1].location, vertices[offset + sliceVertices - 1].location - vertices[offset - 1].location);
+                vertices[offset + sliceVertices - 1].AddNormal(normal);
+                vertices[offset].AddNormal(normal);
+                vertices[offset - 1].AddNormal(normal);
+                vertices[offset - sliceVertices].AddNormal(normal);
             }
+
+            for (int i = vertices.Count() - 1; i >= vertices.Count() - sliceVertices; i--)
+                vertices[i].AddNormal(new Point(0, 0, 1));
         }
 
         private void openGLControl1_Resized(object sender, EventArgs e)
@@ -164,7 +280,7 @@ namespace Lab1
             gl.Perspective(20, aspectRatio, 1, 5000);
             gl.MatrixMode(OpenGL.GL_MODELVIEW);
             gl.LoadIdentity();
-            gl.LookAt(0, 0, -2000, 0, 0, 0, 0, 1, 0);
+            gl.LookAt(0, 100, -250, 0, 0, 0, 0, 1, 0);
         }
     }
 }
