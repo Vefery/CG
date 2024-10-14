@@ -88,7 +88,9 @@ namespace Lab1
         List<Point> slice = new List<Point>(6);
         List<Point> trajectory = new List<Point>();
         Point prevMouseLocation;
+        Point cameraLocation = new Point(100, 10, 100);
         int sliceVertices;
+        bool orbiting = false;
 
         public Form1()
         {
@@ -170,10 +172,22 @@ namespace Lab1
         private void openGLControl1_OpenGLDraw(object sender, RenderEventArgs args)
         {
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);  // Очистка экрана и буфера глубины
-            gl.Rotate(0, 1, 0);
+            //gl.Rotate(0, 1, 0);
 
             DrawGrid();
             DrawNormals();
+
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_AMBIENT, new float[] { 0f, 0f, 0f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_DIFFUSE, new float[] { 0f, 0f, 0f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_EMISSION, new float[] { 1f, 0.5f, 0.5f, 1f });
+            gl.Begin(OpenGL.GL_LINES);
+            gl.Vertex(0, 0, 0);
+            gl.Vertex(cameraLocation.x, 0, cameraLocation.z);
+            gl.End();
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_AMBIENT, new float[] { 0.2f, 0.2f, 0.2f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_DIFFUSE, new float[] { 0.8f, 0.8f, 0.8f, 1f });
+            gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_EMISSION, new float[] { 0f, 0f, 0f, 1f });
+
 
             gl.Material(OpenGL.GL_FRONT_AND_BACK, OpenGL.GL_EMISSION, new float[] { 0f, 0f, 0f, 1f });
             // Отрисовка сечений
@@ -280,7 +294,47 @@ namespace Lab1
             gl.Perspective(20, aspectRatio, 1, 5000);
             gl.MatrixMode(OpenGL.GL_MODELVIEW);
             gl.LoadIdentity();
-            gl.LookAt(0, 100, -250, 0, 0, 0, 0, 1, 0);
+            gl.LookAt(cameraLocation.x, cameraLocation.y, cameraLocation.z, 0, 0, 0, 0, 1, 0);
+        }
+
+        private void openGLControl1_MouseDown(object sender, MouseEventArgs e)
+        {
+            Point p = new Point(e.X, e.Y, 0);
+            prevMouseLocation = p;
+            orbiting = true;
+        }
+
+        private void openGLControl1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (orbiting)
+            {
+                // Дельта перемещения мыши
+                Point delta = new Point((e.X - prevMouseLocation.x), (e.Y - prevMouseLocation.y), 0);
+                cameraLocation.x = (float)(cameraLocation.x * Math.Cos(-delta.x * Math.PI / 180f) + cameraLocation.z * Math.Sin(-delta.x * Math.PI / 180f));
+                cameraLocation.z = (float)(-cameraLocation.x * Math.Sin(-delta.x * Math.PI / 180f) + cameraLocation.z * Math.Cos(-delta.x * Math.PI / 180f));
+                Point forward = cameraLocation.Normalized();
+                Point up = new Point(0, 1, 0);
+                Point right = CrossProduct(forward, up).Normalized();
+                up = CrossProduct(forward, right).Normalized();
+                if (delta.x > 180)
+                    delta.x = 0;
+
+                
+
+                gl.MatrixMode(OpenGL.GL_MODELVIEW);
+                //gl.Rotate(delta.y, right.x, right.y, right.z);
+                //gl.Rotate(delta.x, 0, 1, 0);
+                gl.LoadIdentity();
+                gl.LookAt(cameraLocation.x, cameraLocation.y, cameraLocation.z, 0, 0, 0, -up.x, -up.y, -up.z);
+
+                prevMouseLocation.x = e.X;
+                prevMouseLocation.y = e.Y;
+            }
+        }
+
+        private void openGLControl1_MouseUp(object sender, MouseEventArgs e)
+        {
+            orbiting = false;
         }
     }
 }

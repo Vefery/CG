@@ -48,6 +48,9 @@
             this.openGLControl1.OpenGLDraw += new SharpGL.RenderEventHandler(this.openGLControl1_OpenGLDraw);
             this.openGLControl1.Resized += new System.EventHandler(this.openGLControl1_Resized);
             this.openGLControl1.Load += new System.EventHandler(this.openGLControl1_Load);
+            this.openGLControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.openGLControl1_MouseDown);
+            this.openGLControl1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.openGLControl1_MouseMove);
+            this.openGLControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.openGLControl1_MouseUp);
             // 
             // Form1
             // 
